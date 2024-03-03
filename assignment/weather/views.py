@@ -42,18 +42,27 @@ class WeatherView(APIView):
                 return Response(weather_data, status_code)
 
             # Calling location api to extract coordinates from pincode
-            lat, long = self.__get_lat_long(pin)
+            lat, long, status = self.__get_lat_long(pin)
+            if status != 200:
+                status_code=status
+                raise ValueError("Unable to fetch coordinates")
             location_model_data = {'lat': lat, 'long': long, 'pincode': pin}
             # Creating and saving data in database for caching
             location_instance = Location.objects.create(**location_model_data)
 
             # Calling weather api for a specific coordinates
-            weather_data = self.__get_weather(date, lat, long)
+            weather_data, status = self.__get_weather(date, lat, long)
+            if status != 200:
+                status_code=status
+                raise ValueError("Unable to fetch weather data")
             weather_model_data = {'date': date, 'pincode': location_instance, 'data': json.dumps(weather_data)}
             # Creating and saving data in database for caching
             weather_instance = Weather.objects.create(**weather_model_data)
             status_code = status.HTTP_200_OK
             return Response(weather_data, status_code)
+
+        except ValueError as e:
+            return Response(e.args[1], status_code)
 
         except ValidationError as e:
             return Response(e.detail, status_code)
@@ -70,8 +79,8 @@ class WeatherView(APIView):
                 "zip": f"{pincode},{country}",
                 "appid": f"{apikey}"
         }
-        response = Rest(url, params=params)
-        return response.get('lat'), response.get('lon')
+        response, status = Rest(url, params=params)
+        return response.get('lat'), response.get('lon'), status
 
     def __get_weather(self, date, lat, lon):
         """
@@ -84,6 +93,6 @@ class WeatherView(APIView):
                 "lon": f"{lon}",
                 "appid": f"{apikey}"
         }
-        response = Rest(url, params=params)
-        return response
+        response, status = Rest(url, params=params)
+        return response, status
 

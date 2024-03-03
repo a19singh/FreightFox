@@ -6,5 +6,5 @@ def rest_helper(url, params={}, body={}, headers={}):
     """
     # Verify false is added as the setup is hosted on localhost
     response = requests.request("GET", url, params=params, headers=headers, data=body, verify=False)
-    return response.json()
+    return response.json(), response.status_code
 
