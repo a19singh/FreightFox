@@ -15,3 +15,7 @@ to test the service run the below command in browser window
 ```http://127.0.0.1:8000/weather/?date=2024-02-24&pincode=560048```
 
 Note: Used the current weather external API as historical and forecast API's were paid. The entered date is taken into consideration for caching but weather will be inaccurate for the first fetch call.
+
+To run test case, execute the below commands:
+
+```python manage.py test weather```
